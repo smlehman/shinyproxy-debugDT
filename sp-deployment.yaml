@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shinyproxy
+spec:
+  selector:
+    matchLabels:
+      run: shinyproxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: shinyproxy
+    spec:
+      containers:
+      - name: shinyproxy
+        image: myACR.azurecr.io/shinyproxy-server
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+      - name: kube-proxy-sidecar
+        image: myACR.azurecr.io/kube-proxy-sidecar
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8001
+      imagePullSecrets:
+      - name: REDACTED

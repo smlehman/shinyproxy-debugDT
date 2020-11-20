@@ -1,0 +1,12 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: shinyproxy
+spec:
+  type: ClusterIP #NodePort  #LoadBalancer #
+  selector:
+    run: shinyproxy
+  ports:
+  - protocol: TCP
+    port: 443
+    targetPort: 8080

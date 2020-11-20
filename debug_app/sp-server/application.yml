@@ -1,0 +1,71 @@
+proxy:
+    container-wait-time: 60000 
+    title: "jeffco analytics"
+    port: 8080
+    authentication: openid
+    openid:
+        auth-url: https://login.microsoftonline.com/REDACTED/oauth2/authorize
+        token-url: https://login.microsoftonline.com/REDACTED/oauth2/token
+        jwks-url: https://login.microsoftonline.com/common/discovery/keys
+        client-id: REDACTED
+        client-secret: "REDACTED"
+    container-backend: kubernetes
+    kubernetes:
+      internal-networking: true
+      url: http://localhost:8001
+      image-pull-policy: Always
+      image-pull-secret: REDACTED
+      debug-patches: true
+    specs:
+    - id: 01_hello
+      display-name: Hello Application
+      description: Application which demonstrates the basics of a Shiny app
+      container-cmd: ["R", "-e", "shinyproxy::run_01_hello()"]
+      container-image: openanalytics/shinyproxy-demo
+    # - id: edAI_app
+    #   display-name: Jeffco Analytics
+    #   description: Live analytics for Jeffco
+    #   container-cmd: ["R", "-e", "shiny::runApp('/srv/shiny-server/edai/')"] # this already exists in the docker container.
+    #   container-image: jatestacr.azurecr.io/edai:nodata
+    #   # container-memory-request: 8Gi
+    #   # container-cpu-request: 2000m
+    #   kubernetes-pod-patches: | # (see https://shinyproxy.io/documentation/configuration/#apps for original examples and http://jsonpatch.com/ for how they work)
+    #     - op: add
+    #       path: /spec/volumes
+    #       value:
+    #         - name: pv-afs
+    #           azureFile:
+    #             secretName: azuresecret 
+    #             shareName: afsdatashare
+    #             readOnly: false
+    #     - op: add
+    #       path: /spec/containers/0/volumeMounts
+    #       value:
+    #         - mountPath: /srv/shiny-server/edai/data/
+    #           name: pv-afs
+    #   kubernetes-additional-manifests:
+    #   # # (creating PersistentVolume from AFS patterned after https://docs.microsoft.com/en-us/azure/aks/azure-files-volume  ::: and ::: https://docs.openshift.com/container-platform/4.6/storage/persistent_storage/persistent-storage-azure-file.html)
+    #   # # (generate  volume secret with $ kubectl create secret generic azure-secret --from-literal=azurestorageaccountname=$AKS_PERS_STORAGE_ACCOUNT_NAME --from-literal=azurestorageaccountkey=$STORAGE_KEY
+    #     - |
+    #       apiVersion: v1 
+    #       kind: PersistentVolume 
+    #       metadata: 
+    #         name: pv-afs
+    #       spec:
+    #         capacity:
+    #           storage: 10Gi
+    #         accessModes:
+    #           - ReadWriteMany 
+    #         storageClassName: azurefile
+    #         azureFile:
+    #           secretName: azuresecret 
+    #           shareName: afsdatashare
+    #           readOnly: false
+    - id: debug_app
+      display-name: debug DT app
+      description: Tiny app for debugging DataTables
+      container-cmd: ["R", "-e", "shiny::runApp('/srv/shiny-server/debug_app/')"] # 
+      container-image: jatestacr.azurecr.io/debug_dt
+server:
+    useForwardHeaders: true
+    container-protocol: http
